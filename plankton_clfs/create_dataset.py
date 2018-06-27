@@ -1,6 +1,8 @@
 import glob
 import numpy as np
-
+from skimage.transform import resize
+from skimage.io import imread
+from math import floor
 import os
 import sys
 import skimage.io
@@ -16,7 +18,31 @@ def load(paths):
         img = skimage.io.imread(path, as_grey=True)
         images[k] = img
 
-    return images
+    """
+    Adjust the size of images
+    """
+    target_shape = (95, 95, 1)
+
+    for l in range(len(images)):
+        current = images[l]
+        majorside = np.amax(current.shape)
+        majorside_idx = np.argmax(current.shape)
+        minorside = np.amin(current.shape)
+
+        factor = target_shape[0]/majorside
+        minorside_new = floor(minorside*factor)
+
+        if majorside_idx == 0:
+            current = resize(current, (target_shape[0],minorside_new))
+
+        if majorside_idx == 1:
+            current = resize(current, (minorside_new, target_shape[1]))
+
+        for i in range(current.shape[0]):
+            for j in range(current.shape[1]):
+                new_imgs[l,i,j] = current[i,j]
+
+    return new_imgs
 
 # FIXME: better command line arg parsing?
 def main():
