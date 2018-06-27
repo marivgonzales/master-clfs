@@ -34,10 +34,10 @@ def load(paths):
         minorside_new = floor(minorside*factor)
 
         if majorside_idx == 0:
-            current = resize(current, (target_shape[0],minorside_new), mode='reflect', anti_aliasing=True)
+            current = resize(current, (target_shape[0],minorside_new), mode='reflect')
 
         if majorside_idx == 1:
-            current = resize(current, (minorside_new, target_shape[1]), mode='reflect', anti_aliasing=True)
+            current = resize(current, (minorside_new, target_shape[1]), mode='reflect')
 
         for i in range(current.shape[0]):
             for j in range(current.shape[1]):
