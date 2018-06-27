@@ -73,7 +73,7 @@ def LoadModel(in_shape, num_classes):
 
 batch_size = 32
 num_classes= 121
-epochs = 20 
+epochs = 10 
 
 img_shape = (95, 95, 1)
 
