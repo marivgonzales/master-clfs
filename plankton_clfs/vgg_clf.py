@@ -50,7 +50,7 @@ def LoadModel(in_shape, num_classes):
     #Defining the model
     model = Sequential()
     # this applies 32 convolution filters of size 3x3 each.
-    model.add(Conv2D(32, (3, 3), activation='relu', in_shape=(100, 100, 1)))
+    model.add(Conv2D(32, (3, 3), activation='relu', in_shape=(95, 95, 1)))
     model.add(Conv2D(32, (3, 3), activation='relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Dropout(0.25))
