@@ -66,7 +66,7 @@ def LoadModel(in_shape, num_classes):
     model.add(Dense(num_classes, activation='softmax'))
 
     sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
-    model.compile(loss='categorical_crossentropy', optimizer=sgd)
+    model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
 
 
     return model
@@ -87,7 +87,7 @@ model.summary()
 
 #Training and evaluating
 model.fit(X_train, y_train, batch_size=batch_size, epochs=epochs)
-scores = model.evaluate(X_valid, y_valid, batch_size=batch_size)
+scores = model.evaluate(X_valid, y_valid, verbose=1)
 print('Test loss:', scores[0])
 print('Test accuracy:', scores[1])
 
