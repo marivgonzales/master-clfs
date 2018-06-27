@@ -98,7 +98,7 @@ def LoadModel(in_shape, num_classes):
 
 batch_size = 32
 num_classes= 121
-epochs = 20 
+epochs = 10 
 
 img_shape = (95, 95, 1)
 
@@ -125,8 +125,11 @@ model.compile(loss='categorical_crossentropy',
               optimizer=opt,
               metrics=['accuracy'])
 
+model.fit(X_train, y_train, batch_size=batch_size, epochs=epochs)
+
 # FIXME: zero mean unit variance can be implemented by setting 1st and 3rd args
 # below to True
+"""
 datagen = ImageDataGenerator(
             featurewise_center=False,  # set input mean to 0 over the dataset
             samplewise_center=False,  # set each sample mean to 0
@@ -151,6 +154,7 @@ history = model.fit_generator(datagen.flow(X_train, y_train,
 #model_path = os.path.join(save_dir, model_name)
 #model.save(model_path)
 #print('Saved trained model at %s ' % model_path)
+"""
 
 # Score trained model.
 scores = model.evaluate(X_valid, y_valid, verbose=1)
