@@ -86,7 +86,7 @@ model = LoadModel(img_shape, num_classes)
 model.summary()
 
 #Training and evaluating
-model.fit(x_train, y_train, batch_size=batch_size, epochs=10)
+model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs)
 score = model.evaluate(x_test, y_test, batch_size=batch_size)
 print('Test loss:', scores[0])
 print('Test accuracy:', scores[1])
