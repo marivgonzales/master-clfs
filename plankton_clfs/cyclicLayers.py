@@ -83,7 +83,7 @@ class CyclicRollLayer(Layer):
         self.kernel = self.add_weight(name='kernel', 
                                       shape=(input_shape[1], self.output_dim),
                                       initializer='uniform',
-                                      trainable=True)
+                                      trainable=False)
         super(CyclicRollLayer, self).build(input_shape)  # Be sure to call this at the end
 
     def call(self, x):
@@ -118,7 +118,7 @@ class CyclicConvRollLayer(CyclicRollLayer):
         self.kernel = self.add_weight(name='kernel', 
                                       shape=(input_shape[1], self.output_dim),
                                       initializer='uniform',
-                                      trainable=True)
+                                      trainable=False)
         super(CyclicConvRollLayer, self).build(input_shape)  # Be sure to call this at the end
 
     def call(self, x):
@@ -126,7 +126,7 @@ class CyclicConvRollLayer(CyclicRollLayer):
         input_unfolded = x.reshape((4, s[0] // 4, s[1], s[2], s[3]))
         permuted_inputs = []
         for p, inv_tf in zip(self.perm_matrix, self.inv_tf_funcs):
-            input_permuted = inv_tf(input_unfolded[p].reshape(s))
+            input_permuted = inv_tf(input_unfolded[p].reshape(s)) #FIXME: what a fuck is inv_tf??
             permuted_inputs.append(input_permuted)
         return K.concatenate(permuted_inputs, axis=1)
 
@@ -144,14 +144,14 @@ class CyclicPoolLayer(Layer):
     def __init__(self, output_dim, **kwargs):
         self.output_dim = output_dim
         super(CyclicPoolLayer, self).__init__(**kwargs)
-        self.pool_function = K.mean
+        self.pool_function = K.mean()
 
     def build(self, input_shape):
         # Create a trainable weight variable for this layer.
         self.kernel = self.add_weight(name='kernel', 
                                       shape=(input_shape[1], self.output_dim),
                                       initializer='uniform',
-                                      trainable=True)
+                                      trainable=False)
         super(CyclicPoolLayer, self).build(input_shape)  # Be sure to call this at the end
 
     def call(self, x):

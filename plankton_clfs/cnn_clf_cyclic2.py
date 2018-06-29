@@ -10,8 +10,9 @@ import numpy as np
 import gzip
 from skimage.transform import resize
 
-import cyclicLayers
 from keras.layers import Lambda
+from keras import backend as K
+import theano.tensor as T
 
 #defining some util functions to do the cyclic layers
 def EqualInput(x):
@@ -35,6 +36,16 @@ def array_tf_270(arr):
     return arr[tuple(slices)].transpose(axes_order)
 
 def CyclicSlice(x):
+	"""
+    This layer stacks rotations of 0, 90, 180, and 270 degrees of the input
+    along the batch dimension.
+
+    If the input has shape (batch_size, num_channels, r, c),
+    then the output will have shape (4 * batch_size, num_channels, r, c).
+
+    Note that the stacking happens on axis 0, so a reshape to
+    (4, batch_size, num_channels, r, c) will separate the slice axis.
+    """
     return K.concatenate([
                 array_tf_0(x),
                 array_tf_90(x),
@@ -42,20 +53,95 @@ def CyclicSlice(x):
                 array_tf_270(x),
             ], axis=0)
 
-def output_shape_CyclicSlice(x):
-    return (4*input_shape[0],) + input_shape[1:]
+def output_shape_CyclicSlice(input_shape):
+    return (4*input_shape[0],) + input_shape[1]
+
+def CyclicRoll(x):
+    """
+    This layer turns (n_views * batch_size, num_features) into
+    (n_views * batch_size, n_views * num_features) by rolling
+    and concatenating feature maps.
+    """
+    map_identity = np.arange(4)
+    map_rot90 = np.array([1, 2, 3, 0])
+
+    valid_maps = []
+    current_map = map_identity
+    for k in xrange(4):
+        valid_maps.append(current_map)
+        current_map = current_map[map_rot90]
+
+    perm_matrix = np.array(valid_maps)
+
+    s = x.shape
+    input_unfolded = x.reshape((4, s[0] // 4, s[1]))
+    permuted_inputs = []
+    for p in perm_matrix:
+        input_permuted = input_unfolded[p].reshape(s)
+        permuted_inputs.append(input_permuted)
+    return K.concatenate(permuted_inputs, axis=0)
+
+def output_shape_CyclicRoll(input_shape):
+        return (input_shape[0], 4*input_shape[1])
+        
+
+def CyclicConvRoll(x):
+    """
+    This layer turns (n_views * batch_size, num_channels, r, c) into
+    (n_views * batch_size, n_views * num_channels, r, c) by rolling
+    and concatenating feature maps.
+
+    It also applies the correct inverse transforms to the r and c
+    dimensions to align the feature maps.
+    """
+    map_identity = np.arange(4)
+    map_rot90 = np.array([1, 2, 3, 0])
+    inv_tf_funcs = [array_tf_0, array_tf_270, array_tf_180, array_tf_90]
+
+    valid_maps = []
+    current_map = map_identity
+    for k in xrange(4):
+        valid_maps.append(current_map)
+        current_map = current_map[map_rot90]
+
+    perm_matrix = np.array(valid_maps)
+
+    s = x.shape
+    input_unfolded = x.reshape((4, s[0] // 4, s[1], s[2], s[3]))
+    permuted_inputs = []
+    for p, inv_tf in zip(perm_matrix, inv_tf_funcs):
+        input_permuted = inv_tf(input_unfolded[p].reshape(s))
+        permuted_inputs.append(input_permuted)
+    return K.concatenate(permuted_inputs, axis=1)
+
+def output_shape_CyclicConvRoll(input_shape):
+    return ((input_shape[0], 4*input_shape[1]) + input_shape[2:])
+        
+        
+def CyclicPool(x):
+    """
+    Utility layer that unfolds the viewpoints dimension and pools over it.
+
+    Note that this only makes sense for dense representations, not for
+    feature maps (because no inverse transforms are applied to align them).
+    """
+    unfolded_input = input.reshape((4, x.shape[0] // 4, x.shape[1]))
+    return T.mean(unfolded_input, axis=0)
+
+def output_shape_CyclicPool(input_shape):
+        return (input_shape[0] // 4, input_shape[1])
 
 
-
+#Preprocess
 def PreprocessImgs(imgs, target_size):
     new_imgs = np.zeros((len(imgs), target_size[0], target_size[1]))
 
     for i in range(len(imgs)):
         # FIXME anti_aliasing?
-        # check what this resize is doing to the images
         new_imgs[i] = resize(imgs[i], target_size, mode='wrap').astype('float32')
     return new_imgs
 
+#Load data
 def LoadTrainData(target_shape):
     train_path = "./ndsb_dataset/images_train.npy.gz"
     labels_path = "./ndsb_dataset/labels_train.npy.gz"
@@ -77,6 +163,7 @@ def LoadTrainData(target_shape):
 
     return X_train, y_train, X_valid, y_valid
 
+#Model configurations
 def LoadModel(in_shape, num_classes):
     # FIXME: 
     # - In the original network, the bias for convolutional layers is set to 1.0
