@@ -12,28 +12,30 @@ from skimage.transform import resize
 
 from keras.layers import Lambda
 from keras import backend as K
-import theano.tensor as T
+import tensorflow
+from tensorflow import image as tfimage
+from tensorflow import reshape
 
 #defining some util functions to do the cyclic layers
-def EqualInput(x):
-    return x
-
 def array_tf_0(arr):
     return arr
 
 def array_tf_90(arr):
-    axes_order = range(arr.ndim - 2) + [arr.ndim - 1, arr.ndim - 2]
-    slices = [slice(None) for _ in range(arr.ndim - 2)] + [slice(None), slice(None, None, -1)]
-    return arr[tuple(slices)].transpose(axes_order)
+    #axes_order =np.add( range(arr.ndim - 2) , [arr.ndim - 1, arr.ndim - 2])
+    #slices = [slice(None) for _ in range(arr.ndim - 2)] + [slice(None), slice(None, None, -1)]
+    #return arr[tuple(slices)].transpose()#(axes_order)
+    return tfimage.rot90(arr,k=1)
 
 def array_tf_180(arr):
-    slices = [slice(None) for _ in range(arr.ndim - 2)] + [slice(None, None, -1), slice(None, None, -1)]
-    return arr[tuple(slices)]
+    #slices = [slice(None) for _ in range(arr.ndim - 2)] + [slice(None, None, -1), slice(None, None, -1)]
+    #return arr[tuple(slices)]
+    return tfimage.rot90(arr,k=2)
 
 def array_tf_270(arr):
-    axes_order = range(arr.ndim - 2) + [arr.ndim- 1, arr.ndim - 2]
-    slices = [slice(None) for _ in range(arr.ndim - 2)] + [slice(None, None, -1), slice(None)]
-    return arr[tuple(slices)].transpose(axes_order)
+    #axes_order = range(arr.ndim - 2) + [arr.ndim- 1, arr.ndim - 2]
+    #slices = [slice(None) for _ in range(arr.ndim - 2)] + [slice(None, None, -1), slice(None)]
+    #return arr[tuple(slices)].transpose()#(axes_order)
+    return tfimage.rot90(arr,k=3)
 
 def CyclicSlice(x):
     """
@@ -46,15 +48,14 @@ def CyclicSlice(x):
     Note that the stacking happens on axis 0, so a reshape to
     (4, batch_size, num_channels, r, c) will separate the slice axis.
     """
-    return K.concatenate([
-                array_tf_0(x),
-                array_tf_90(x),
-                array_tf_180(x),
-                array_tf_270(x),
-            ], axis=0)
+    return K.concatenate([array_tf_0(x), array_tf_90(x), array_tf_180(x), array_tf_270(x)], axis=0)    
+     
 
 def output_shape_CyclicSlice(input_shape):
-    return (4*input_shape[0],) + input_shape[1]
+    if input_shape[0] == None:
+        return input_shape
+    else: 
+        return (4*input_shape[0],) + input_shape[1:]
 
 def CyclicRoll(x):
     """
@@ -67,7 +68,7 @@ def CyclicRoll(x):
 
     valid_maps = []
     current_map = map_identity
-    for k in xrange(4):
+    for k in range(4):
         valid_maps.append(current_map)
         current_map = current_map[map_rot90]
 
@@ -100,19 +101,22 @@ def CyclicConvRoll(x):
 
     valid_maps = []
     current_map = map_identity
-    for k in xrange(4):
+    for k in range(4):
         valid_maps.append(current_map)
         current_map = current_map[map_rot90]
 
     perm_matrix = np.array(valid_maps)
-
+    
     s = x.shape
-    input_unfolded = x.reshape((4, s[0] // 4, s[1], s[2], s[3]))
-    permuted_inputs = []
-    for p, inv_tf in zip(perm_matrix, inv_tf_funcs):
-        input_permuted = inv_tf(input_unfolded[p].reshape(s))
-        permuted_inputs.append(input_permuted)
-    return K.concatenate(permuted_inputs, axis=1)
+    if input_shape[0] != None:
+        permuted_inputs = []
+        input_unfolded = reshape(x, (4, s[0]// 4, s[1], s[2], s[3]))
+        for p, inv_tf in zip(perm_matrix, inv_tf_funcs):
+            input_permuted = inv_tf(reshape(input_unfolded[p],(s))
+            permuted_inputs.append(input_permuted)
+        return K.concatenate(permuted_inputs, axis=1)
+    else:
+        return x
 
 def output_shape_CyclicConvRoll(input_shape):
     return ((input_shape[0], 4*input_shape[1]) + input_shape[2:])
@@ -125,11 +129,11 @@ def CyclicPool(x):
     Note that this only makes sense for dense representations, not for
     feature maps (because no inverse transforms are applied to align them).
     """
-    unfolded_input = input.reshape((4, x.shape[0] // 4, x.shape[1]))
+    unfolded_input = x.reshape((4, x.shape[0] // 4, x.shape[1]))
     return T.mean(unfolded_input, axis=0)
 
 def output_shape_CyclicPool(input_shape):
-    return (input_shape[0] // 4, input_shape[1])
+    return (input_shape[1] // 4, input_shape[2])
 
 
 #Preprocess
@@ -172,8 +176,8 @@ def LoadModel(in_shape, num_classes):
 
     a = 0.3
     # This looks like they call l0 in the code
-    model.add(Lambda(function=EqualInput, output_shape=in_shape, input_shape=in_shape))
-    model.add(Lambda(function=CyclicSlice, output_shape=output_shape_CyclicSlice))
+    #model.add(Lambda(function=EqualInput, output_shape=in_shape, input_shape=in_shape))
+    model.add(Lambda(function=CyclicSlice, output_shape=output_shape_CyclicSlice, input_shape=in_shape))
     #model.add(cyclicLayers.CyclicSliceLayer(in_shape=in_shape,input_shape=in_shape))
 	 
     # This looks like they call l1 in the code
@@ -182,7 +186,8 @@ def LoadModel(in_shape, num_classes):
     model.add(Conv2D(16, (3,3), padding='same'))
     model.add(LeakyReLU(alpha=a))
     model.add(MaxPooling2D(pool_size=(3,3), strides=(2,2)))
-    model.add(cyclicLayers.CyclicConvRollLayer())
+    #model.add(cyclicLayers.CyclicConvRollLayer())
+    model.add(Lambda(function=CyclicConvRoll, output_shape=output_shape_CyclicConvRoll))
 
     # This looks like what they call l2 in the code
     model.add(Conv2D(64, (3,3), padding='same'))
@@ -190,7 +195,8 @@ def LoadModel(in_shape, num_classes):
     model.add(Conv2D(32, (3,3), padding='same'))
     model.add(LeakyReLU(alpha=a))
     model.add(MaxPooling2D(pool_size=(3,3), strides=(2,2)))
-    model.add(cyclicLayers.CyclicConvRollLayer())
+    #model.add(cyclicLayers.CyclicConvRollLayer())
+    model.add(Lambda(function=CyclicConvRoll, output_shape=output_shape_CyclicConvRoll))
 
     # This looks like what they cal l3 in the code
     model.add(Conv2D(128, (3,3), padding='same'))
@@ -200,7 +206,8 @@ def LoadModel(in_shape, num_classes):
     model.add(Conv2D(64, (3,3), padding='same'))
     model.add(LeakyReLU(alpha=a))
     model.add(MaxPooling2D(pool_size=(3,3), strides=(2,2)))
-    model.add(cyclicLayers.CyclicConvRollLayer())
+    #model.add(cyclicLayers.CyclicConvRollLayer())
+    model.add(Lambda(function=CyclicConvRoll, output_shape=output_shape_CyclicConvRoll))
 
     # This looks like what they call l4 in the code
     model.add(Conv2D(256, (3,3), padding='same'))
@@ -210,7 +217,8 @@ def LoadModel(in_shape, num_classes):
     model.add(Conv2D(128, (3,3), padding='same'))
     model.add(LeakyReLU(alpha=a))
     model.add(MaxPooling2D(pool_size=(3,3), strides=(2,2)))
-    model.add(cyclicLayers.CyclicConvRollLayer())
+    #model.add(cyclicLayers.CyclicConvRollLayer())
+    model.add(Lambda(function=CyclicConvRoll, output_shape=output_shape_CyclicConvRoll))
     model.add(Flatten())
     
 
@@ -218,13 +226,15 @@ def LoadModel(in_shape, num_classes):
     model.add(Dropout(0.5))
     model.add(Dense(256))
     model.add(LeakyReLU(alpha=a))
-    model.add(cyclicLayers.CyclicRollLayer())
-    
+    #model.add(cyclicLayers.CyclicRollLayer())
+    model.add(Lambda(function=CyclicRoll, output_shape=output_shape_CyclicRoll))
+
     # This looks like what they call l6
     model.add(Dropout(0.5))
     model.add(Dense(256))
     model.add(LeakyReLU(alpha=a))
-    model.add(cyclicLayers.CyclicPoolLayer())
+    #model.add(cyclicLayers.CyclicPoolLayer())
+    model.add(Lambda(function=CyclicPool, output_shape=output_shape_CyclicPool))
     
     # This looks like what they call l7
     model.add(Dropout(0.5))
