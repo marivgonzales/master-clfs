@@ -36,7 +36,7 @@ def array_tf_270(arr):
     return arr[tuple(slices)].transpose(axes_order)
 
 def CyclicSlice(x):
-	"""
+    """
     This layer stacks rotations of 0, 90, 180, and 270 degrees of the input
     along the batch dimension.
 
@@ -82,7 +82,7 @@ def CyclicRoll(x):
     return K.concatenate(permuted_inputs, axis=0)
 
 def output_shape_CyclicRoll(input_shape):
-        return (input_shape[0], 4*input_shape[1])
+    return (input_shape[0], 4*input_shape[1])
         
 
 def CyclicConvRoll(x):
@@ -129,7 +129,7 @@ def CyclicPool(x):
     return T.mean(unfolded_input, axis=0)
 
 def output_shape_CyclicPool(input_shape):
-        return (input_shape[0] // 4, input_shape[1])
+    return (input_shape[0] // 4, input_shape[1])
 
 
 #Preprocess
