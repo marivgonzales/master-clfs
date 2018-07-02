@@ -14,27 +14,18 @@ from keras.layers import Lambda
 from keras import backend as K
 import tensorflow
 from tensorflow import image as tfimage
-from tensorflow import reshape
 
 #defining some util functions to do the cyclic layers
 def array_tf_0(arr):
     return arr
 
 def array_tf_90(arr):
-    #axes_order =np.add( range(arr.ndim - 2) , [arr.ndim - 1, arr.ndim - 2])
-    #slices = [slice(None) for _ in range(arr.ndim - 2)] + [slice(None), slice(None, None, -1)]
-    #return arr[tuple(slices)].transpose()#(axes_order)
     return tfimage.rot90(arr,k=1)
 
 def array_tf_180(arr):
-    #slices = [slice(None) for _ in range(arr.ndim - 2)] + [slice(None, None, -1), slice(None, None, -1)]
-    #return arr[tuple(slices)]
     return tfimage.rot90(arr,k=2)
 
 def array_tf_270(arr):
-    #axes_order = range(arr.ndim - 2) + [arr.ndim- 1, arr.ndim - 2]
-    #slices = [slice(None) for _ in range(arr.ndim - 2)] + [slice(None, None, -1), slice(None)]
-    #return arr[tuple(slices)].transpose()#(axes_order)
     return tfimage.rot90(arr,k=3)
 
 def CyclicSlice(x):
@@ -43,19 +34,12 @@ def CyclicSlice(x):
     along the batch dimension.
 
     If the input has shape (batch_size, num_channels, r, c),
-    then the output will have shape (4 * batch_size, num_channels, r, c).
+    then the output will have shape (4 * batch_size, r, c, num_channels).
 
     Note that the stacking happens on axis 0, so a reshape to
-    (4, batch_size, num_channels, r, c) will separate the slice axis.
+    (4, batch_size, r, c, num_channels) will separate the slice axis.
     """
     return K.concatenate([array_tf_0(x), array_tf_90(x), array_tf_180(x), array_tf_270(x)], axis=0)    
-     
-
-def output_shape_CyclicSlice(input_shape):
-    if input_shape[0] == None:
-        return input_shape
-    else: 
-        return (4*input_shape[0],) + input_shape[1:]
 
 def CyclicRoll(x):
     """
@@ -63,69 +47,37 @@ def CyclicRoll(x):
     (n_views * batch_size, n_views * num_features) by rolling
     and concatenating feature maps.
     """
-    map_identity = np.arange(4)
-    map_rot90 = np.array([1, 2, 3, 0])
-
-    valid_maps = []
-    current_map = map_identity
-    for k in range(4):
-        valid_maps.append(current_map)
-        current_map = current_map[map_rot90]
-
-    perm_matrix = np.array(valid_maps)
-    
     s = x.shape
-    if s[0] != None:
-        input_unfolded = reshape(x, (4, s[0] // 4, s[1]))
-        permuted_inputs = []
-        for p in perm_matrix:
-            input_permuted = reshape(input_unfolded[p],(s))
-            permuted_inputs.append(input_permuted)
-        return K.concatenate(permuted_inputs, axis=0)
-    else: 
-        return x
-
-def output_shape_CyclicRoll(input_shape):
-    if input_shape != None:
-        return (input_shape[0], 4*input_shape[1])
-    else:
-        return input_shape    
-
+    print(s)
+   
+    input_unfolded = K.reshape(x, (4, s[0] // 4, s[1]))
+    permuted_inputs = []
+    for p in range(4):
+        input_permuted = K.reshape((tensorflow.manip.roll(input_unfolded, shift=-1-p, axix=0)),(s))
+        permuted_inputs.append(input_permuted)
+    return K.concatenate(permuted_inputs, axis=1)
+        
 def CyclicConvRoll(x):
     """
     This layer turns (n_views * batch_size, num_channels, r, c) into
-    (n_views * batch_size, n_views * num_channels, r, c) by rolling
+    (n_views * batch_size, r, c, n-views * num_channels) by rolling
     and concatenating feature maps.
 
     It also applies the correct inverse transforms to the r and c
     dimensions to align the feature maps.
     """
-    map_identity = np.arange(4)
-    map_rot90 = np.array([1, 2, 3, 0])
     inv_tf_funcs = [array_tf_0, array_tf_270, array_tf_180, array_tf_90]
-
-    valid_maps = []
-    current_map = map_identity
-    for k in range(4):
-        valid_maps.append(current_map)
-        current_map = current_map[map_rot90]
-
-    perm_matrix = np.array(valid_maps)
-    
+    k = 0
     s = x.shape
-    if s[0] != None:
-        permuted_inputs = []
-        input_unfolded = reshape(x, (4, s[0]// 4, s[1], s[2], s[3]))
-        for p, inv_tf in zip(perm_matrix, inv_tf_funcs):
-            input_permuted = inv_tf(reshape(input_unfolded[p],(s)))
-            permuted_inputs.append(input_permuted)
-        return K.concatenate(permuted_inputs, axis=1)
-    else:
-        return x
+    print(s)
 
-def output_shape_CyclicConvRoll(input_shape):
-    return ((input_shape[0], 4*input_shape[1]) + input_shape[2:])
-        
+    permuted_inputs = []
+    input_unfolded = K.reshape(x, (4, s[0]// 4, s[1], s[2], s[3]))
+    for inv_tf in inv_tf_funcs:
+        input_permuted = inv_tf(K.reshape((tensorflow.manip.roll(input_unfolded, shift=-1-k, axis=0)),(s)))
+        k = k+1
+        permuted_inputs.append(input_permuted)
+    return K.concatenate(permuted_inputs, axis=3)
         
 def CyclicPool(x):
     """
@@ -134,24 +86,21 @@ def CyclicPool(x):
     Note that this only makes sense for dense representations, not for
     feature maps (because no inverse transforms are applied to align them).
     """
-    unfolded_input = x.reshape((4, x.shape[0] // 4, x.shape[1]))
-    return T.mean(unfolded_input, axis=0)
-
-def output_shape_CyclicPool(input_shape):
-    return (input_shape[1] // 4, input_shape[2])
-
-
+    unfolded_input = K.reshape(x, (4, x.shape[0] // 4, x.shape[1]))
+    return K.mean(unfolded_input, axis=0)
+   
 #Preprocess
 def PreprocessImgs(imgs, target_size):
     new_imgs = np.zeros((len(imgs), target_size[0], target_size[1]))
 
     for i in range(len(imgs)):
         # FIXME anti_aliasing?
-        new_imgs[i] = resize(imgs[i], target_size, mode='wrap').astype('float32')
+        new_imgs[i] = resize(imgs[i], target_size, mode='wrap', anti_aliasing=True).astype('float32')
     return new_imgs
 
 #Load data
 def LoadTrainData(target_shape):
+    print("Loading data...")
     train_path = "./ndsb_dataset/images_train.npy.gz"
     labels_path = "./ndsb_dataset/labels_train.npy.gz"
     with gzip.open(labels_path, "rb") as f:
@@ -173,26 +122,23 @@ def LoadTrainData(target_shape):
     return X_train, y_train, X_valid, y_valid
 
 #Model configurations
-def LoadModel(in_shape, num_classes):
+def LoadModel(in_shape, num_classes, batch_size):
     # FIXME: 
     # - In the original network, the bias for convolutional layers is set to 1.0
-   
+    print("Loading model...")
     model = Sequential()
 
     a = 0.3
     # This looks like they call l0 in the code
-    #model.add(Lambda(function=EqualInput, output_shape=in_shape, input_shape=in_shape))
-    model.add(Lambda(function=CyclicSlice, output_shape=output_shape_CyclicSlice, input_shape=in_shape))
-    #model.add(cyclicLayers.CyclicSliceLayer(in_shape=in_shape,input_shape=in_shape))
-	 
+    model.add(Lambda(function=CyclicSlice, input_shape=in_shape, batch_size=batch_size))
+    	 
     # This looks like they call l1 in the code
     model.add(Conv2D(32, (3,3), padding='same'))
     model.add(LeakyReLU(alpha=a))
     model.add(Conv2D(16, (3,3), padding='same'))
     model.add(LeakyReLU(alpha=a))
     model.add(MaxPooling2D(pool_size=(3,3), strides=(2,2)))
-    #model.add(cyclicLayers.CyclicConvRollLayer())
-    model.add(Lambda(function=CyclicConvRoll, output_shape=output_shape_CyclicConvRoll))
+    model.add(Lambda(function=CyclicConvRoll))
 
     # This looks like what they call l2 in the code
     model.add(Conv2D(64, (3,3), padding='same'))
@@ -200,8 +146,7 @@ def LoadModel(in_shape, num_classes):
     model.add(Conv2D(32, (3,3), padding='same'))
     model.add(LeakyReLU(alpha=a))
     model.add(MaxPooling2D(pool_size=(3,3), strides=(2,2)))
-    #model.add(cyclicLayers.CyclicConvRollLayer())
-    model.add(Lambda(function=CyclicConvRoll, output_shape=output_shape_CyclicConvRoll))
+    model.add(Lambda(function=CyclicConvRoll))
 
     # This looks like what they cal l3 in the code
     model.add(Conv2D(128, (3,3), padding='same'))
@@ -211,8 +156,7 @@ def LoadModel(in_shape, num_classes):
     model.add(Conv2D(64, (3,3), padding='same'))
     model.add(LeakyReLU(alpha=a))
     model.add(MaxPooling2D(pool_size=(3,3), strides=(2,2)))
-    #model.add(cyclicLayers.CyclicConvRollLayer())
-    model.add(Lambda(function=CyclicConvRoll, output_shape=output_shape_CyclicConvRoll))
+    model.add(Lambda(function=CyclicConvRoll))
 
     # This looks like what they call l4 in the code
     model.add(Conv2D(256, (3,3), padding='same'))
@@ -222,8 +166,7 @@ def LoadModel(in_shape, num_classes):
     model.add(Conv2D(128, (3,3), padding='same'))
     model.add(LeakyReLU(alpha=a))
     model.add(MaxPooling2D(pool_size=(3,3), strides=(2,2)))
-    #model.add(cyclicLayers.CyclicConvRollLayer())
-    model.add(Lambda(function=CyclicConvRoll, output_shape=output_shape_CyclicConvRoll))
+    model.add(Lambda(function=CyclicConvRoll))
     model.add(Flatten())
     
 
@@ -232,7 +175,7 @@ def LoadModel(in_shape, num_classes):
     model.add(Dense(256))
     model.add(LeakyReLU(alpha=a))
     #model.add(cyclicLayers.CyclicRollLayer())
-    model.add(Lambda(function=CyclicRoll, output_shape=output_shape_CyclicRoll))
+    model.add(Lambda(function=CyclicRoll, input_shape=(128, 256)))
 
     # This looks like what they call l6
     model.add(Dropout(0.5))
@@ -251,7 +194,7 @@ batch_size = 32
 num_classes= 121
 epochs = 10 
 
-img_shape = (95, 95, 1)
+img_shape = (128, 128, 1)
 
 X_train, y_train, X_valid, y_valid = LoadTrainData(img_shape)
 
@@ -264,7 +207,7 @@ X_train, y_train, X_valid, y_valid = LoadTrainData(img_shape)
 y_train = keras.utils.to_categorical(y_train, num_classes)
 y_valid = keras.utils.to_categorical(y_valid, num_classes)
 
-model = LoadModel(img_shape, num_classes)
+model = LoadModel(img_shape, num_classes, batch_size)
 model.summary()
 
 #opt = keras.optimizers.rmsprop(lr=0.0001, decay=1e-6)
