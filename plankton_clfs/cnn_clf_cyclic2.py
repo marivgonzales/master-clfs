@@ -73,18 +73,23 @@ def CyclicRoll(x):
         current_map = current_map[map_rot90]
 
     perm_matrix = np.array(valid_maps)
-
+    
     s = x.shape
-    input_unfolded = x.reshape((4, s[0] // 4, s[1]))
-    permuted_inputs = []
-    for p in perm_matrix:
-        input_permuted = input_unfolded[p].reshape(s)
-        permuted_inputs.append(input_permuted)
-    return K.concatenate(permuted_inputs, axis=0)
+    if s[0] != None:
+        input_unfolded = reshape(x, (4, s[0] // 4, s[1]))
+        permuted_inputs = []
+        for p in perm_matrix:
+            input_permuted = reshape(input_unfolded[p],(s))
+            permuted_inputs.append(input_permuted)
+        return K.concatenate(permuted_inputs, axis=0)
+    else: 
+        return x
 
 def output_shape_CyclicRoll(input_shape):
-    return (input_shape[0], 4*input_shape[1])
-        
+    if input_shape != None:
+        return (input_shape[0], 4*input_shape[1])
+    else:
+        return input_shape    
 
 def CyclicConvRoll(x):
     """
@@ -108,11 +113,11 @@ def CyclicConvRoll(x):
     perm_matrix = np.array(valid_maps)
     
     s = x.shape
-    if input_shape[0] != None:
+    if s[0] != None:
         permuted_inputs = []
         input_unfolded = reshape(x, (4, s[0]// 4, s[1], s[2], s[3]))
         for p, inv_tf in zip(perm_matrix, inv_tf_funcs):
-            input_permuted = inv_tf(reshape(input_unfolded[p],(s))
+            input_permuted = inv_tf(reshape(input_unfolded[p],(s)))
             permuted_inputs.append(input_permuted)
         return K.concatenate(permuted_inputs, axis=1)
     else:
