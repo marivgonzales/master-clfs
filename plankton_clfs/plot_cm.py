@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 
 from sklearn.metrics import confusion_matrix
 
-y_pred = np.load("./laps_nobg_100/predictions.npy")
-y_test = np.load("./laps_nobg_100/real_labels.npy")
+y_pred = np.load("./laps_nobg_100/predictions_1.npy")
+y_test = np.load("./laps_nobg_100/real_labels_1.npy")
 
 def plot_confusion_matrix(cm,
                           normalize=False,
