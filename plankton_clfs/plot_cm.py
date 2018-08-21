@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 
 y_pred = np.load("./laps_nobg_100/predictions_1.npy")
@@ -112,3 +113,5 @@ ax.set_xticklabels((classes_real_sorted))
 
 fig.tight_layout()
 plt.show()
+
+print(sklearn.metrics.classification_report(y_test, y_pred))
