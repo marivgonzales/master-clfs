@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 
-y_pred = np.load("./ndsb_dataset_tax/predicted_labels.npy")
-y_test = np.load("./ndsb_dataset_tax/real_labels.npy")
+y_pred = np.load("./laps_nobg_100/predictions_tax.npy")
+y_test = np.load("./laps_nobg_100/real_labels_tax.npy")
 
 def plot_confusion_matrix(cm,
                           normalize=False,
@@ -21,7 +21,7 @@ def plot_confusion_matrix(cm,
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
     plt.title(title)
     plt.colorbar()
-    tick_marks = np.arange((33))
+    tick_marks = np.arange((19))
     plt.xticks(tick_marks, rotation=45)
     plt.yticks(tick_marks)
     """
