@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 
-y_pred = np.load("./laps_nobg_100/predictions_1.npy")
-y_test = np.load("./laps_nobg_100/real_labels_1.npy")
+y_pred = np.load("./ndsb_dataset_tax/predicted_labels.npy")
+y_test = np.load("./ndsb_dataset_tax/real_labels.npy")
 
 def plot_confusion_matrix(cm,
                           normalize=False,
@@ -21,7 +21,7 @@ def plot_confusion_matrix(cm,
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
     plt.title(title)
     plt.colorbar()
-    tick_marks = np.arange((20))
+    tick_marks = np.arange((33))
     plt.xticks(tick_marks, rotation=45)
     plt.yticks(tick_marks)
     """
@@ -72,21 +72,21 @@ print("\nAccuracy:\n", total_accuracy)
 counts_real = np.copy(counts_reall)
 classes_real_sorted = np.zeros(len(classes_real), dtype='uint32')
 counts_real_sorted = np.zeros(len(counts_real), dtype='uint32')
-counts_pred_sorted = np.zeros(len(counts_pred), dtype='uint32')
+counts_pred_sorted = np.zeros(len(counts_real), dtype='uint32')
 mistakes_sorted = np.zeros(len(mistakes), dtype='uint32')
 percent_sorted = np.zeros(len(classes_real), dtype='float')
 for c in range(len(classes_real)):
     max_idx = np.argmax(counts_real)
     counts_real_sorted[-1-c] = counts_real[max_idx]
     classes_real_sorted[-1-c] = classes_real[max_idx]
-    counts_pred_sorted[-1-c] = counts_pred[max_idx]
+    #counts_pred_sorted[-1-c] = counts_pred[max_idx]
     mistakes_sorted[-1-c] = mistakes[max_idx]
     percent_sorted[-1-c] = percent[max_idx]
     counts_real[max_idx] = -1
 
 print("\nClasses sorted by number of images:\n", classes_real_sorted)
 print("\nSorted number of images in the validation set by class:\n", counts_real_sorted)
-print("\nSorted number of images predicted in the validation set by class:\n", counts_pred_sorted)
+#print("\nSorted number of images predicted in the validation set by class:\n", counts_pred_sorted)
 print("\nSorted number of mistakes in the validation set by class:\n", mistakes_sorted)
 print("\nSorted percent of mistakes in the validation set by class:\n", percent_sorted)
 
@@ -114,4 +114,4 @@ ax.set_xticklabels((classes_real_sorted))
 fig.tight_layout()
 plt.show()
 
-print(sklearn.metrics.classification_report(y_test, y_pred))
+print(classification_report(y_test, y_pred))
