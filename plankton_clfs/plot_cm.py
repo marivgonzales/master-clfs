@@ -1,37 +1,38 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import gzip
 
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 
-y_pred = np.load("./laps_nobg_100/predictions_tax.npy")
-y_test = np.load("./laps_nobg_100/real_labels_tax.npy")
+y_pred1 = np.load("./laps_nobg_100/predictions_deep_nounk.npy")
+y_pred = np.argmax(y_pred1, axis=1)
+
+
+labels_path = "./laps_nobg_100/labels_train.npy.gz"
+with gzip.open(labels_path, "rb") as f:
+    y_test = np.load(f)
+#y_test1 = np.load("./laps_nobg_100/real_labels_tax.npy")
+
+
+print("Rótulos verdadeiros:\n", y_test)
+print("Rótulos preditos:\n", y_pred)
+
 
 def plot_confusion_matrix(cm,
                           normalize=False,
                           title='Confusion matrix',
                           cmap=plt.cm.Blues):
-    """
-    This function prints and plots the confusion matrix.
-    Normalization can be applied by setting `normalize=True`.
-    """
+                        
     if normalize:
         cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
      
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
     plt.title(title)
     plt.colorbar()
-    tick_marks = np.arange((19))
+    tick_marks = np.arange((118))
     plt.xticks(tick_marks, rotation=45)
     plt.yticks(tick_marks)
-    """
-    fmt = '.2f' if normalize else 'd'
-    thresh = cm.max() / 2.
-    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
-        plt.text(j, i, format(cm[i, j], fmt),
-                 horizontalalignment="center",
-                 color="white" if cm[i, j] > thresh else "black")
-    """
     plt.tight_layout()
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
