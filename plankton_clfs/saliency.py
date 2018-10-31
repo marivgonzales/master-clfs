@@ -7,7 +7,7 @@ from keras.optimizers import RMSprop
 from keras.preprocessing.image import ImageDataGenerator
 from keras.callbacks import ModelCheckpoint
 from keras.callbacks import EarlyStopping
-
+from keras.models import model_from_json
 
 from vis.visualization import visualize_saliency
 from vis.utils import utils
@@ -75,16 +75,16 @@ num_classes= 198
 
 img_shape = (95, 95, 1)
 
-X_train, y_train, X_valid, Y_valid = LoadTrainData(img_shape)
+X_train, y_train, X_valid, y_valid = LoadTrainData(img_shape)
 
 # load json and create model
-json_file = open('model.json', 'r')
+json_file = open('model_nounk.json', 'r')
 loaded_model_json = json_file.read()
 json_file.close()
 model = model_from_json(loaded_model_json)
 
 # load weights into new model
-model.load_weights("model.h5")
+model.load_weights("model_nounk.h5")
 model.summary()
 
 # Swap softmax with linear
@@ -93,7 +93,8 @@ model = utils.apply_modifications(model)
 
 grads = visualize_saliency(model, -1, filter_indices=y_valid[0], seed_input=X_valid[0])
 # Plot with 'jet' colormap to visualize as a heatmap.
-np.save("./saliency_test.npy", grads)
+np.save("./saliency_test_nounk.npy", grads)
+print("saliency_test_nounk.npy saved")
 #plt.imshow(grads, cmap='jet')
 #plt.show()
 
