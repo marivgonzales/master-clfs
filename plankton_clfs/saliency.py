@@ -59,7 +59,7 @@ def LoadTrainData(target_shape):
     #X_train, y_train = imgs[train_idx], labels[train_idx]
     X_valid, y_valid = imgs[valid_idx], labels[valid_idx]
 
-    return X_train, y_train, X_valid, y_valid
+    return X_valid, y_valid
 
 batch_size = 32
 num_classes= 198
