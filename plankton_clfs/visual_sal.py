@@ -7,7 +7,8 @@ from keras import activations
 
 from vis.visualization import visualize_saliency, overlay
 
-
+import tensorflow as tf 
+print(tf.__version__)
 # Build the VGG16 network with ImageNet weights
 model = VGG16(weights='imagenet', include_top=True)
 
