@@ -5,20 +5,22 @@ import gzip
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 
-y_pred1 = np.load("./laps_nobg_100/predictions_deep_nounk.npy")
-y_pred = np.argmax(y_pred1, axis=1)
+y_pred1 = np.load("./ndsb_dataset_nounk/predicted_labels_nounk.npy")
+#y_pred = np.argmax(y_pred1, axis=1)
 
 
-labels_path = "./laps_nobg_100/labels_train.npy.gz"
+labels_path = "./ndsb_dataset_nounk/labels_train.npy.gz"
 with gzip.open(labels_path, "rb") as f:
     y_test = np.load(f)
 #y_test1 = np.load("./laps_nobg_100/real_labels_tax.npy")
 
+valid_idx = np.load("./ndsb_dataset_nounk/indices_valid.npy")
+y_valid = y_test[valid_idx]
 
-print("Rótulos verdadeiros:\n", y_test)
-print("Rótulos preditos:\n", y_pred)
+print("Rótulos verdadeiros:\n", y_valid)
+print("Rótulos preditos:\n", y_pred1)
 
-
+"""
 def plot_confusion_matrix(cm,
                           normalize=False,
                           title='Confusion matrix',
@@ -116,3 +118,4 @@ fig.tight_layout()
 plt.show()
 
 print(classification_report(y_test, y_pred))
+"""

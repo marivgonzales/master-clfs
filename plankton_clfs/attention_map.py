@@ -119,7 +119,6 @@ model = utils.apply_modifications(model)
 
 grads = visualize_saliency(model, -1, filter_indices=y_valid[0], seed_input=X_valid[0])
 # Plot with 'jet' colormap to visualize as a heatmap.
-print(grads)
-#plt.imshow(grads, cmap='jet')
-#plt.show()
+plt.imshow(grads, cmap='jet')
+plt.show()
 
