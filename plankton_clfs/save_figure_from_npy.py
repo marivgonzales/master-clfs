@@ -7,11 +7,14 @@ import gzip
 import os
 
 #show the attention map of the test image
-grads = np.load("./saliency_test_nounk.npy")
+grads = np.load("./saliency_test_nounk1.npy")
+grads1 = np.load("./saliency_test_nounk2.npy")
 
 plt.imshow(grads, cmap='jet')
 plt.show()
 
+plt.imshow(grads1, cmap='jet')
+plt.show()
 
 #looking for the test image
 def PreprocessImgs(imgs, target_size):
@@ -67,8 +70,10 @@ img_shape = (95, 95, 1)
 
 X_valid, y_valid = LoadTrainData(img_shape)
 
-print("Label of test image:", y_valid[0])
+print("Label of test image:", y_valid[-1])
+plt.imshow(X_valid[-1], cmap='gray')
+plt.show()
 
-print(X_valid[0].shape)
-plt.imshow(X_valid[0], cmap='gray')
+print("Label of test image:", y_valid[-2])
+plt.imshow(X_valid[-2], cmap='gray')
 plt.show()
