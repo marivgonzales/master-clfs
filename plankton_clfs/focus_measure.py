@@ -84,13 +84,13 @@ def PreprocessImgs(imgs, target_size):
         minorside_pad = floor((target_size[0] - minorside_new)/2)
         
         if majorside_idx == 0:
-            current = resize(current, (target_size[0], minorside_new), mode='constant', anti_aliasing=True)
+            current = resize(current, (target_size[0], minorside_new), mode='constant')
             for j in range(current.shape[0]):
                 for k in range(current.shape[1]):
                     new_imgs[i,j,(k + minorside_pad)] = current[j,k]
 
         if majorside_idx == 1:
-            current = resize(current, (minorside_new, target_size[1]), mode='constant', anti_aliasing=True)
+            current = resize(current, (minorside_new, target_size[1]), mode='constant')
             for j in range(current.shape[0]):
                 for k in range(current.shape[1]):
                     new_imgs[i,(j + minorside_pad),k] = current [j,k]
@@ -99,13 +99,13 @@ def PreprocessImgs(imgs, target_size):
     return new_imgs
 
 def LoadTrainData(target_shape):
-    train_path = "./laps_nobg_100/images_train.npy.gz"
-    labels_path = "./laps_nobg_100/labels_train.npy.gz"
+    train_path = "./ndsb_dataset_nounk/images_train.npy.gz"
+    labels_path = "./ndsb_dataset_nounk/labels_train.npy.gz"
     with gzip.open(labels_path, "rb") as f:
         labels = np.load(f)
 
-    train_idx = np.load("./laps_nobg_100/indices_train.npy")
-    valid_idx = np.load("./laps_nobg_100/indices_valid.npy")
+    train_idx = np.load("./ndsb_dataset_nounk/indices_train.npy")
+    valid_idx = np.load("./ndsb_dataset_nounk/indices_valid.npy")
 
 
     with gzip.open(train_path, "rb") as f:
@@ -134,7 +134,4 @@ for i in range(len(X_valid)):
  #   f[i,3] = MLOG(X_valid[i])
 
 print(f)
-#np.save("./focus_measure_laps.npy", f)
-
-plt.scatter(f[:,0], f[:,1])
-plt.show
+np.save("./focus_measure_ndsb_nounk.npy", f)
