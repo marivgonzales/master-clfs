@@ -12,8 +12,8 @@ from keras.utils import to_categorical
 import numpy as np
 import gzip
 import math
-
-from sklearn import preprocessing
+from math import floor
+from skimage.transform import resize
 
 import os
 
@@ -46,13 +46,13 @@ def PreprocessImgs(imgs, target_size):
     return new_imgs
 
 def LoadTrainData(target_shape):
-    train_path = "./ndsb_dataset/images_train.npy.gz"
-    labels_path = "./ndsb_dataset/labels_train.npy.gz"
+    train_path = "./ndsb_dataset_nounk/images_train.npy.gz"
+    labels_path = "./ndsb_dataset_nounk/labels_train.npy.gz"
     with gzip.open(labels_path, "rb") as f:
         labels = np.load(f)
 
-    train_idx = np.load("./ndsb_dataset/indices_train.npy")
-    valid_idx = np.load("./ndsb_dataset/indices_valid.npy")
+    train_idx = np.load("./ndsb_dataset_nounk/indices_train.npy")
+    valid_idx = np.load("./ndsb_dataset_nounk/indices_valid.npy")
 
 
     with gzip.open(train_path, "rb") as f:
@@ -131,11 +131,11 @@ def step_decay(epoch):
 
 
 batch_size = 32
-num_classes= 121
+num_classes= 119
 
 img_shape = (95, 95, 1)
 
-X_train, y_train, X_valid, y_valid = LoadTrainData()
+X_train, y_train, X_valid, y_valid = LoadTrainData(img_shape)
 X_train = X_train.astype("float32")
 X_valid = X_valid.astype("float32")
 y_train = to_categorical(y_train, num_classes)
@@ -168,7 +168,7 @@ model.compile(loss='categorical_crossentropy',
               metrics=['accuracy'])
 
 
-model_path = "best_model_079.hdf5" 
+model_path = "./ndsb_dataset_nounk/best_model_079.hdf5" 
 
 checkpoint = ModelCheckpoint(model_path,
         monitor='val_acc',
@@ -182,26 +182,26 @@ model.fit_generator(train_generator,
                     steps_per_epoch=len(X_train) // batch_size,
                     validation_data=(X_valid, y_valid),
                     validation_steps=len(X_valid) // batch_size,
-                    epochs=800,
+                    epochs=550,
                     callbacks=[lrate, checkpoint])
 
 model_json = model.to_json()
-with open("model_079.json","w") as json_file:
+with open("./ndsb_dataset_nounk/model_079.json","w") as json_file:
     json_file.write(model_json)
 print('Saved trained model at best_model_079.hdf5 and model_079.json')
 
-predictions = model.predict(X_valid, batch_size=batch_size)
-predicted_labels = np.argmax(predictions, axis=1)
-np.save("./ndsb_dataset/complete_predictions_valid.npy", predictions)
-np.save("./ndsb_dataset/predicted_labels_valid.npy", predicted_labels)
-np.save("./ndsb_dataset_tax/real_labels_valid.npy", Y_valid)
+predictions_valid = model.predict(X_valid, batch_size=batch_size)
+predicted_labels_valid = np.argmax(predictions_valid, axis=1)
+np.save("./ndsb_dataset_nounk/complete_predictions_079_valid.npy", predictions_valid)
+np.save("./ndsb_dataset_nounk/predicted_labels_079_valid.npy", predicted_labels_valid)
+np.save("./ndsb_dataset_nounk/real_labels_079_valid.npy", y_valid)
+
 
 predictions = model.predict(X_train, batch_size=batch_size)
 predicted_labels = np.argmax(predictions, axis=1)
-np.save("./ndsb_dataset/complete_predictions_train.npy", predictions)
-np.save("./ndsb_dataset/predicted_labels_train.npy", predicted_labels)
-np.save("./ndsb_dataset_tax/real_labels_train.npy", Y_train)
-print("Predictions saved")
+np.save("./ndsb_dataset_nounk/complete_predictions_079_train.npy", predictions)
+np.save("./ndsb_dataset_nounk/predicted_labels_079_train.npy", predicted_labels)
+np.save("./ndsb_dataset_nounk/real_labels_079_train.npy", y_train)
 
 print("Predictions saved")
 
