@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 
 from sklearn.metrics import confusion_matrix
 
-y_pred = np.load("./laps_nobg_100/predictions.npy")
-y_test = np.load("./laps_nobg_100/real_labels.npy")
+y_pred = np.load("./ndsb_dataset_nounk/labels_predicted_079_valid_grouped.npy")
+y_test = np.load("./ndsb_dataset_nounk/labels_real_079_valid_grouped.npy")
 
 def plot_confusion_matrix(cm,
                           normalize=False,
@@ -20,7 +20,7 @@ def plot_confusion_matrix(cm,
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
     plt.title(title)
     plt.colorbar()
-    tick_marks = np.arange((20))
+    tick_marks = np.arange((34))
     plt.xticks(tick_marks, rotation=45)
     plt.yticks(tick_marks)
     """
@@ -78,14 +78,12 @@ for c in range(len(classes_real)):
     max_idx = np.argmax(counts_real)
     counts_real_sorted[-1-c] = counts_real[max_idx]
     classes_real_sorted[-1-c] = classes_real[max_idx]
-    counts_pred_sorted[-1-c] = counts_pred[max_idx]
     mistakes_sorted[-1-c] = mistakes[max_idx]
     percent_sorted[-1-c] = percent[max_idx]
     counts_real[max_idx] = -1
 
 print("\nClasses sorted by number of images:\n", classes_real_sorted)
 print("\nSorted number of images in the validation set by class:\n", counts_real_sorted)
-print("\nSorted number of images predicted in the validation set by class:\n", counts_pred_sorted)
 print("\nSorted number of mistakes in the validation set by class:\n", mistakes_sorted)
 print("\nSorted percent of mistakes in the validation set by class:\n", percent_sorted)
 
