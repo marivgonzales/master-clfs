@@ -7,7 +7,7 @@ from sklearn.metrics import classification_report
 
 
 def load_data():
-    train_path = "./features.npy"
+    train_path = "./laps_nobg_100/features_nounk_079.npy"
     labels_path = "./laps_nobg_100/labels_train.npy.gz"
     with gzip.open(labels_path, "rb") as f:
         labels = np.load(f)
@@ -44,8 +44,8 @@ print("The scores are computed on the full evaluation set.")
 y_true, y_pred = y_valid, clf.predict(X_valid)
 print(classification_report(y_true, y_pred))
 
-np.save("./laps_nobg_100/predictions.npy", y_pred)
-np.save("./laps_nobg_100/real_labels.npy", y_true)
+np.save("./laps_nobg_100/predictions_transfer_079_nounk.npy", y_pred)
+np.save("./laps_nobg_100/real_labels_transfer_079_nounk.npy", y_true)
 
 print("Predictions saved.")
 

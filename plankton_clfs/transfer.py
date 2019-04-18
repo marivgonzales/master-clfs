@@ -97,8 +97,8 @@ def LoadModel(in_shape, num_classes):
     return model
 
 batch_size = 32
-num_classes= 20
-epochs = 10
+num_classes= 118
+#epochs = 10
 
 img_shape = (95, 95, 1)
 
@@ -108,13 +108,13 @@ layer_dict = dict([(layer.name, layer) for layer in model.layers])
 [layer.name for layer in model.layers]
 
 # load json and create model
-json_file = open('model.json', 'r')
+json_file = open('./ndsb_dataset_nounk/model_079.json', 'r')
 loaded_model_json = json_file.read()
 json_file.close()
 loaded_model = model_from_json(loaded_model_json)
 
 # load weights into new model
-loaded_model.load_weights("model.h5")
+loaded_model.load_weights("./ndsb_dataset_nounk/best_model_079.hdf5")
 
 layer_names = [layer.name for layer in model.layers]
 for i in layer_dict.keys():
@@ -129,5 +129,5 @@ X_train = LoadTrainData(img_shape)
 
 
 predictions = model.predict(X_train)
-np.save("./features.npy", predictions)
-print("Features saved at './features.npy'")
+np.save("./laps_nobg_100/features_nounk_079.npy", predictions)
+print("Features saved at './laps_nobg_100/features_nounk_079.npy'")
