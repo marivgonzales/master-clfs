@@ -2,23 +2,27 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
-measures = np.load("focus_valid_ndsb_nounk.npy")
+measures = np.load("focus_measure_ndsb_nounk.npy")
 predictions= np.load("./ndsb_dataset_nounk/complete_predictions_079_valid.npy")
-
+real_labels = np.load("./ndsb_dataset_nounk/real_labels_079_valid.npy")
+predicted_labels = np.load("./ndsb_dataset_nounk/predicted_labels_079_valid.npy")
 #grouped
+"""
 predicted_labels = np.load("./ndsb_dataset_nounk/labels_predicted_079_valid_grouped.npy")
 real_labels = np.load("./ndsb_dataset_nounk/labels_real_079_valid_grouped.npy")
 scores = np.load("./ndsb_dataset_nounk/max_scores_predicted_079_valid_grouped.npy")
-measures = np.log(measures)
+#measures = np.log(measures)
+"""
 
-data = pd.DataFrame({'max': scores, 'real':real_labels, 'predicted':predicted_labels, 'lapv':measures[:,0], 'lapm':measures[:,1], 'teng':measures[:,2]})
-#scores = pd.DataFrame(predictions)
-#data['max'] = scores.apply(max, axis=1)
+data = pd.DataFrame({'real':real_labels, 'predicted':predicted_labels, 'lapv':measures[:,0], 'lapm':measures[:,1], 'teng':measures[:,2], 'gblvar':measures[:,3], 'totvar':measures[:,4]})
+# = pd.DataFrame(predictions)
+data['max'] = scores.apply(max, axis=1)
 
 
-var = 'max'
+var = 'gblvar'
 colors = ['blue', 'red']
 
+"""
 
 #ploting boxplots
 f, a = plt.subplots(1,33, sharex=False, sharey=True)
@@ -86,4 +90,3 @@ for i in range(38):
     
 f.subplots_adjust(hspace=0)
 plt.show()
-"""

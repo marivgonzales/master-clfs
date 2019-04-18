@@ -4,6 +4,7 @@ import numpy as np
 from math import floor
 from skimage.transform import resize
 import gzip
+import scipy
 
 import matplotlib.pyplot as plt
 
@@ -52,6 +53,13 @@ def MLOG(img):
     
     return np.max(cv2.convertScaleAbs(cv2.Laplacian(img, 3)))
 """
+
+def GBLVAR(img):
+    return np.var(scipy.ndimage.uniform_filter(img))
+
+def TOTVAR(img):
+    return np.sum(scipy.ndimage.uniform_filter(img))
+
 # Loading data
 """
 train_path = "./laps_nobg_100/images_train.npy.gz"
@@ -110,28 +118,37 @@ def LoadTrainData(target_shape):
 
     with gzip.open(train_path, "rb") as f:
         imgs = np.load(f)
+
+    """
     imgs = PreprocessImgs(imgs, (target_shape[0], target_shape[1]))
     new_shape = (len(imgs), target_shape[0], target_shape[1], target_shape[2])
     imgs = np.reshape(imgs, new_shape)
+    """
 
     X_train, y_train = imgs[train_idx], labels[train_idx]
     X_valid, y_valid = imgs[valid_idx], labels[valid_idx]
 
-    return X_train, y_train, X_valid, y_valid
+    X_valid = PreprocessImgs(X_valid, (target_shape[0], target_shape[1]))
+    new_shape = (len(X_valid), target_shape[0], target_shape[1], target_shape[2])
+    X_valid = np.reshape(X_valid, new_shape)
+
+
+    return X_valid
 
 
 img_shape = (95, 95, 1)
 
-X_train, y_train, X_valid, Y_valid = LoadTrainData(img_shape)
+X_valid = LoadTrainData(img_shape)
 
 
-f = np.zeros((len(X_valid), 3))
+f = np.zeros((len(X_valid), 5))
 
 for i in range(len(X_valid)):
     f[i,0] = LAPV(X_valid[i])
     f[i,1] = LAPM(X_valid[i])
     f[i,2] = TENG(X_valid[i])
- #   f[i,3] = MLOG(X_valid[i])
+    f[i,3] = GBLVAR(X_valid[i])
+    f[i,4] = TOTVAR(X_valid[i])
 
 print(f)
 np.save("./focus_measure_ndsb_nounk.npy", f)

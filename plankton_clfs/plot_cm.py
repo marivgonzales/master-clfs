@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 
 from sklearn.metrics import confusion_matrix
 
@@ -111,7 +112,8 @@ ax.set_xticklabels((classes_real_sorted))
 fig.tight_layout()
 plt.show()
 
-# TODO: Plot relation with focus measure
+#plot f1 score
+
 
 
 
