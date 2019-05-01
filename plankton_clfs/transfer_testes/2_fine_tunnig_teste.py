@@ -1,4 +1,5 @@
 import keras
+from keras.models import model_from_json
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Flatten
 from keras.layers import Conv2D, MaxPooling2D
@@ -117,10 +118,12 @@ def LoadModel(in_shape, num_classes):
     return model
 
 def step_decay(epoch):
-    if epoch < 10:
-        return 0.0001
+    if epoch < 30:
+        return 1e-4
+    elif epoch < 100:
+        return 5e-5
     else:
-        return 0.00003
+        return 2e-5
 
 
 batch_size = 32
@@ -200,7 +203,7 @@ model.fit_generator(train_generator,
                     steps_per_epoch=len(X_train) // batch_size,
                     validation_data=(X_valid, y_valid),
                     validation_steps=len(X_valid) // batch_size,
-                    epochs=550,
+                    epochs=200,
                     callbacks=[lrate, checkpoint])
 
 model_json = model.to_json()
