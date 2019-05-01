@@ -43,7 +43,7 @@ def PreprocessImgs(imgs, target_size):
     return new_imgs
 
 def LoadTrainData(target_shape):
-    train_path = "./laps_nobg_100/images_train.npy.gz"
+    train_path = "../laps_nobg_100/images_train.npy.gz"
     with gzip.open(train_path, "rb") as f:
         imgs = np.load(f)
 
@@ -88,14 +88,25 @@ def LoadModel(in_shape, num_classes):
     model.add(LeakyReLU(alpha=a))
     model.add(Conv2D(256, (3,3), padding='same'))
     model.add(LeakyReLU(alpha=a))
+    model.add(Conv2D(128, (3,3), padding='same'))
+    model.add(LeakyReLU(alpha=a))
+    model.add(MaxPooling2D(pool_size=(3,3), strides=(2,2)))
     model.add(Flatten())
+    model.add(Dropout(0.5))
+
+    # This looks like what they call l5
+    model.add(Dense(256))
+    model.add(LeakyReLU(alpha=a))
+    model.add(Dropout(0.5))
+    model.add(Dense(256))
+    model.add(LeakyReLU(alpha=a))
     model.add(Dropout(0.5))
 
     return model
 
 batch_size = 32
-num_classes= 118
-#epochs = 10
+num_classes= 20
+epochs = 10
 
 img_shape = (95, 95, 1)
 
@@ -121,10 +132,15 @@ for i in layer_dict.keys():
 
 model.summary()
 
+model.add(Dense(num_classes, activation='softmax'))
 
+for layer in model.layers[:25]:
+    layer.trainable = False
+
+model.summary()
 X_train = LoadTrainData(img_shape)
 
 
 predictions = model.predict(X_train)
-np.save("./laps_nobg_100/features_nounk_079_teste.npy", predictions)
-print("Features saved at './laps_nobg_100/features_nounk_079_teste.npy'")
+np.save("./predictions_teste2.npy", predictions)
+print("Predictions saved.")
