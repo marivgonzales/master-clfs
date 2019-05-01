@@ -14,10 +14,12 @@ scores = np.load("./ndsb_dataset_nounk/max_scores_predicted_079_valid_grouped.np
 #measures = np.log(measures)
 """
 
-data = pd.DataFrame({'real':real_labels, 'predicted':predicted_labels, 'lapv':measures[:,0], 'lapm':measures[:,1], 'teng':measures[:,2], 'gblvar':measures[:,3], 'totvar':measures[:,4]})
-# = pd.DataFrame(predictions)
-data['max'] = scores.apply(max, axis=1)
+real = pd.DataFrame(real_labels);
 
+data = pd.DataFrame({'real':real.apply(np.argmax, axis=1), 'predicted':predicted_labels, 'lapv':measures[:,0], 'lapm':measures[:,1], 'teng':measures[:,2], 'gblvar':measures[:,3], 'totvar':measures[:,4]})
+# = pd.DataFrame(predictions)
+#data['max'] = scores.apply(max, axis=1)
+print(data.head())
 
 var = 'gblvar'
 colors = ['blue', 'red']
