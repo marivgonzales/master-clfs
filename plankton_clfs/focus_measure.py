@@ -107,13 +107,19 @@ def PreprocessImgs(imgs, target_size):
     return new_imgs
 
 def LoadTrainData(target_shape):
-    train_path = "./ndsb_dataset_nounk/images_train.npy.gz"
-    labels_path = "./ndsb_dataset_nounk/labels_train.npy.gz"
+    train_path = "./laps_nobg_100/images_train.npy.gz"
+    labels_path = "./laps_nobg_100/labels_train.npy.gz"
+
+    #train_path = "./ndsb_dataset_nounk/images_train.npy.gz"
+    #labels_path = "./ndsb_dataset_nounk/labels_train.npy.gz"
     with gzip.open(labels_path, "rb") as f:
         labels = np.load(f)
 
-    train_idx = np.load("./ndsb_dataset_nounk/indices_train.npy")
-    valid_idx = np.load("./ndsb_dataset_nounk/indices_valid.npy")
+    train_idx = np.load("./laps_nobg_100/indices_train.npy")
+    valid_idx = np.load("./laps_nobg_100/indices_valid.npy")
+
+    #train_idx = np.load("./ndsb_dataset_nounk/indices_train.npy")
+    #valid_idx = np.load("./ndsb_dataset_nounk/indices_valid.npy")
 
 
     with gzip.open(train_path, "rb") as f:
@@ -151,4 +157,4 @@ for i in range(len(X_valid)):
     f[i,4] = TOTVAR(X_valid[i])
 
 print(f)
-np.save("./focus_measure_ndsb_nounk.npy", f)
+np.save("./focus_valid_laps.npy", f)
