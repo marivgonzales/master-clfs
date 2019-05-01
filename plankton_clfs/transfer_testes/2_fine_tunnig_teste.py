@@ -117,7 +117,7 @@ def LoadModel(in_shape, num_classes):
 
     return model
 
-def step_decay(epoch):
+def step_decay1(epoch):
     if epoch < 30:
         return 1e-4
     elif epoch < 100:
@@ -125,6 +125,8 @@ def step_decay(epoch):
     else:
         return 2e-5
 
+def step_decay(epoch):
+    return 1e-4
 
 batch_size = 32
 num_classes= 20
