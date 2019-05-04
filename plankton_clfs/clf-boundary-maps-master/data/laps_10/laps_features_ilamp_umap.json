@@ -1,0 +1,1 @@
+{"grid": "data/laps_10/grid_ilamp_umap.joblib", "clf": "data/laps_10/lr.json", "inv_proj_type": "ilamp", "inv_proj": "data/laps_10/ilamp_umap.joblib", "y_true": "data/laps_10/y_train.npy", "y_pred": "data/laps_10/y_pred_clf.npy"}
