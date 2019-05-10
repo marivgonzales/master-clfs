@@ -4,8 +4,8 @@ import pandas as pd
 
 from sklearn.metrics import confusion_matrix
 
-y_pred = np.load("./ndsb_dataset_nounk/labels_predicted_079_valid_grouped.npy")
-y_test = np.load("./ndsb_dataset_nounk/labels_real_079_valid_grouped.npy")
+y_pred = np.load("./experimentos/cnn_079_ndsb_nounk/predicted_labels_079_valid.npy")
+y_test1 = np.load("./experimentos/cnn_079_ndsb_nounk/real_labels_079_valid.npy")
 
 def plot_confusion_matrix(cm,
                           normalize=False,
@@ -21,7 +21,7 @@ def plot_confusion_matrix(cm,
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
     plt.title(title)
     plt.colorbar()
-    tick_marks = np.arange((34))
+    tick_marks = np.arange((119))
     plt.xticks(tick_marks, rotation=45)
     plt.yticks(tick_marks)
     """
@@ -36,6 +36,7 @@ def plot_confusion_matrix(cm,
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
 
+y_test = np.argmax(y_test1, axis=1)
 # Compute confusion matrix
 cnf_matrix = confusion_matrix(y_test, y_pred)
 np.set_printoptions(precision=2)

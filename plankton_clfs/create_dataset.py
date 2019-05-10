@@ -56,17 +56,23 @@ def main():
         labels_train[k] = class_names.index(class_name)
 
     print("Saving train labels")
-    np.save(basedir + "labels_train.npy", labels_train)
+
+    np.save("./laps_focus_filtered/labels_train.npy", labels_train)
+    #np.save(basedir + "labels_train.npy", labels_train)
     print("Gzipping train labels")
-    os.system("gzip " + basedir + "labels_train.npy")
+    os.system("gzip " + "./laps_focus_filtered/labels_train.npy")
+    #os.system("gzip " + basedir + "labels_train.npy")
 
     print("Loading train images")
     images_train = load(paths_train)
     print("Saving train images")
-    np.save(basedir +  "images_train.npy", images_train)
+    np.save("./laps_focus_filtered/images_train.npy", images_train)
+    #np.save(basedir +  "images_train.npy", images_train)
     del images_train
     print("Gzipping train images")
-    os.system("gzip " + basedir + "images_train.npy")
+    
+    os.system("gzip " + "./laps_focus_filtered/images_train.npy")
+    #os.system("gzip " + basedir + "images_train.npy")
     """
     print("Loading test images")
     images_test = load(paths_test)
@@ -81,8 +87,11 @@ def main():
     if create_validation == True:
         split = StratifiedShuffleSplit(n_splits=1,test_size=0.1)
         indices_train, indices_valid = next(split.split(np.zeros(len(labels_train)), labels_train))
-        np.save(basedir + "indices_train.npy", indices_train)
-        np.save(basedir + "indices_valid.npy", indices_valid)
+        np.save("./laps_focus_filtered/indices_train.npy", indices_train)
+        np.save("./laps_focus_filtered/indices_valid.npy", indices_valid)
+
+        #np.save(basedir + "indices_train.npy", indices_train)
+        #np.save(basedir + "indices_valid.npy", indices_valid)
 
 if __name__ == "__main__":
     main()
