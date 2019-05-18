@@ -6,7 +6,7 @@ from math import floor
 import os
 import sys
 import skimage.io
-from sklearn.model_selection import StratifiedShuffleSplit
+#from sklearn.model_selection import StratifiedShuffleSplit
 import pickle
 import cv2
 
@@ -73,6 +73,7 @@ def main():
 
     labels_train = np.empty(len(labels), dtype='int32')
     images_train = np.empty(len(paths), dtype='object')
+
     for i in range(images):
     	focus_measure = np.log(TENG(images[i]))
     	if focus_measure > -3.3:
@@ -88,13 +89,13 @@ def main():
     os.system("gzip " + "./laps_focus_filtered/labels_train.npy")
     #os.system("gzip " + basedir + "labels_train.npy")
 
-    print("Loading train images")
+    """    print("Loading train images")
     images_train = load(paths_train)
     print("Saving train images")
     np.save("./laps_focus_filtered/images_train.npy", images_train)
     #np.save(basedir +  "images_train.npy", images_train)
     del images_train
-    print("Gzipping train images")
+    print("Gzipping train images")"""
     
     os.system("gzip " + "./laps_focus_filtered/images_train.npy")
     #os.system("gzip " + basedir + "images_train.npy")
@@ -108,8 +109,11 @@ def main():
     """
     print("Done")
 
+    print(labels_train)
+
 
     if create_validation == True:
+
         split = StratifiedShuffleSplit(n_splits=1,test_size=0.1)
         indices_train, indices_valid = next(split.split(np.zeros(len(labels_train)), labels_train))
         np.save("./laps_focus_filtered/indices_train.npy", indices_train)
