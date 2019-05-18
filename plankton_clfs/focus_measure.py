@@ -134,12 +134,12 @@ def LoadTrainData(target_shape):
     X_train, y_train = imgs[train_idx], labels[train_idx]
     X_valid, y_valid = imgs[valid_idx], labels[valid_idx]
 
-    X_valid = PreprocessImgs(X_valid, (target_shape[0], target_shape[1]))
-    new_shape = (len(X_valid), target_shape[0], target_shape[1], target_shape[2])
-    X_valid = np.reshape(X_valid, new_shape)
+    X_train = PreprocessImgs(X_train, (target_shape[0], target_shape[1]))
+    new_shape = (len(X_train), target_shape[0], target_shape[1], target_shape[2])
+    X_train = np.reshape(X_train, new_shape)
 
 
-    return X_valid
+    return X_train
 
 
 img_shape = (95, 95, 1)
@@ -157,4 +157,4 @@ for i in range(len(X_valid)):
     f[i,4] = TOTVAR(X_valid[i])
 
 print(f)
-np.save("./focus_valid_laps.npy", f)
+np.save("./focus_train_laps.npy", f)

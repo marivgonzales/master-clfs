@@ -74,8 +74,8 @@ def main():
     labels_train = np.empty(len(labels), dtype='int32')
     images_train = np.empty(len(paths), dtype='object')
     for i in range(images):
-    	focus_measure = TENG(images[i]);
-    	if focus_measure > -2.5:
+    	focus_measure = np.log(TENG(images[i]))
+    	if focus_measure > -3.3:
     		images_train.append(images[i])
     		labels_train.append(labels[i])
 
