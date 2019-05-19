@@ -4,10 +4,11 @@ import pandas as pd
 
 from sklearn.metrics import confusion_matrix
 
-y_pred = np.load("./experimentos/cnn_079_ndsb_nounk/predicted_labels_079_valid.npy")
-y_test1 = np.load("./experimentos/cnn_079_ndsb_nounk/real_labels_079_valid.npy")
+y_pred = np.load("./experimentos/transfer_laps_cnn_079_ndsb_nounk_ffilter_2-3/predicted_labels_valid_ftteste5.npy")
+y_test1 = np.load("./experimentos/transfer_laps_cnn_079_ndsb_nounk_ffilter_2-3/real_labels_valid_ftteste5.npy")
 
 def plot_confusion_matrix(cm,
+                          n_classes,
                           normalize=False,
                           title='Confusion matrix',
                           cmap=plt.cm.Blues):
@@ -21,7 +22,7 @@ def plot_confusion_matrix(cm,
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
     plt.title(title)
     plt.colorbar()
-    tick_marks = np.arange((119))
+    tick_marks = np.arange((n_classes))
     plt.xticks(tick_marks, rotation=45)
     plt.yticks(tick_marks)
     """
@@ -42,15 +43,17 @@ cnf_matrix = confusion_matrix(y_test, y_pred)
 np.set_printoptions(precision=2)
 
 # Plot normalized confusion matrix
+
+classes_real, counts_reall = np.unique(y_test, return_counts=True)
+classes_pred, counts_pred = np.unique(y_pred, return_counts=True)
+
 plt.figure()
-plot_confusion_matrix(cnf_matrix, normalize=True,
+plot_confusion_matrix(cnf_matrix, len(classes_real), normalize=True,
                       title='Normalized confusion matrix')
 
 plt.show()
 
 # Compute barchart for classes
-classes_real, counts_reall = np.unique(y_test, return_counts=True)
-classes_pred, counts_pred = np.unique(y_pred, return_counts=True)
 
 print("\nNumber of images in the validation set by class:\n", counts_reall)
 print("\nNumber of images predicted in the validation set by class:\n", counts_pred)
