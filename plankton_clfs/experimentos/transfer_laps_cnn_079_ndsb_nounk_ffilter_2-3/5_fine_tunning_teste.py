@@ -88,6 +88,9 @@ def LoadTrainData(target_shape):
     split = StratifiedShuffleSplit(n_splits=1,test_size=0.1)
     train_idx, valid_idx = next(split.split(np.zeros(len(focused_labels)), focused_labels))
 
+    np.save("./train_indices_ftteste5.npy", train_idx)
+    np.save("./valid_indices_ftteste5.npy", valid_idx)
+
     X_train, y_train = focused_images[train_idx], labels[train_idx]
     X_valid, y_valid = focused_images[valid_idx], labels[valid_idx]
 

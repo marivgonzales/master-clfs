@@ -117,11 +117,10 @@ def LoadModel(in_shape, num_classes):
 
     return model
 
-def step_decay(epoch):
-        return 5e-3
 
 batch_size = 32
 num_classes= 20
+epochs = 200
 
 img_shape = (95, 95, 1)
 
@@ -132,21 +131,22 @@ y_train = to_categorical(y_train, num_classes)
 y_valid = to_categorical(y_valid, num_classes)
 
 
+opt = keras.optimizers.rmsprop(lr=0.0001, decay=1e-6)
+
+
 datagen = ImageDataGenerator(
-                             rotation_range=60,
-                             featurewise_center=True,
-                             featurewise_std_normalization=True,
-                             width_shift_range=0.15,
-                             height_shift_range=0.15,
-                             zoom_range=0.2,
-                             shear_range=10,
+                             rotation_range=180,
+                             featurewise_center=False,
+                             featurewise_std_normalization=False,
+                             width_shift_range=0.1,
+                             height_shift_range=0.1,
                              horizontal_flip=True,
                              vertical_flip=True)
 
 datagen.fit(X_train)
-X_valid = datagen.standardize(X_valid)
 
 train_generator = datagen.flow(X_train, y_train, batch_size=batch_size)
+
 
 model = LoadModel(img_shape, num_classes)
 
@@ -155,13 +155,13 @@ layer_dict = dict([(layer.name, layer) for layer in model.layers])
 [layer.name for layer in model.layers]
 
 # load json and create model
-json_file = open('../model_nounk.json', 'r')
+json_file = open('../ndsb_dataset_nounk/model_07.json', 'r')
 loaded_model_json = json_file.read()
 json_file.close()
 loaded_model = model_from_json(loaded_model_json)
 
 # load weights into new model
-loaded_model.load_weights("../model_nounk.h5")
+loaded_model.load_weights("../ndsb_dataset_nounk/best_model_07.hdf5")
 
 layer_names = [layer.name for layer in model.layers]
 for i in layer_dict.keys():
@@ -176,14 +176,13 @@ for layer in model.layers[:25]:
 
 model.summary()
 
-opt = keras.optimizers.SGD(lr=0.0, momentum=0.9, nesterov=True)
 
 model.compile(loss='categorical_crossentropy',
               optimizer=opt,
               metrics=['accuracy'])
 
 
-model_path = "./model_fine_tuning_teste_3.hdf5" 
+model_path = "./model_fine_tuning_teste_4.hdf5" 
 
 checkpoint = ModelCheckpoint(model_path,
         monitor='val_acc',
@@ -191,14 +190,12 @@ checkpoint = ModelCheckpoint(model_path,
         save_best_only=True,
         mode='max')
 
-lrate = LearningRateScheduler(step_decay)
-
 model.fit_generator(train_generator,
                     steps_per_epoch=len(X_train) // batch_size,
                     validation_data=(X_valid, y_valid),
                     validation_steps=len(X_valid) // batch_size,
                     epochs=200,
-                    callbacks=[lrate, checkpoint])
+                    callbacks=[checkpoint])
 
 model_json = model.to_json()
 with open("./model_fine_tuning_teste_4.json","w") as json_file:

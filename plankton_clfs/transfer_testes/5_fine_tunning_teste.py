@@ -9,14 +9,27 @@ from keras.callbacks import ModelCheckpoint
 from keras.callbacks import EarlyStopping
 from keras.callbacks import LearningRateScheduler
 from keras.utils import to_categorical
+from sklearn.model_selection import StratifiedShuffleSplit
 
 import numpy as np
 import gzip
 import math
 from math import floor
 from skimage.transform import resize
-
+import cv2
 import os
+
+def TENG(img):
+    """Implements the Tenengrad (TENG) focus measure operator.
+    Based on the gradient of the image.
+    :param img: the image the measure is applied to
+    :type img: numpy.ndarray
+    :returns: numpy.float32 -- the degree of focus
+    """
+    gaussianX = cv2.Sobel(img, cv2.CV_64F, 1, 0)
+    gaussianY = cv2.Sobel(img, cv2.CV_64F, 1, 0)
+    return np.mean(gaussianX * gaussianX +
+                      gaussianY * gaussianY)
 
 def PreprocessImgs(imgs, target_size):
     new_imgs = np.ones((len(imgs), target_size[0], target_size[1]))
@@ -44,26 +57,42 @@ def PreprocessImgs(imgs, target_size):
                     new_imgs[i,(j + minorside_pad),k] = current [j,k]
 
         new_imgs[i] = new_imgs[i].astype('float32')
+
+    
     return new_imgs
 
 def LoadTrainData(target_shape):
-    train_path = "../laps_focus_filtered/images_train.npy.gz"
-    labels_path = "../laps_focus_filtered/labels_train.npy.gz"
+    train_path = "../laps_nobg_100/images_train.npy.gz"
+    labels_path = "../laps_nobg_100/labels_train.npy.gz"
     with gzip.open(labels_path, "rb") as f:
         labels = np.load(f)
-
-    train_idx = np.load("../laps_focus_filtered/indices_train.npy")
-    valid_idx = np.load("../laps_focus_filtered/indices_valid.npy")
-
 
     with gzip.open(train_path, "rb") as f:
         imgs = np.load(f)
     imgs = PreprocessImgs(imgs, (target_shape[0], target_shape[1]))
-    new_shape = (len(imgs), target_shape[0], target_shape[1], target_shape[2])
-    imgs = np.reshape(imgs, new_shape)
 
-    X_train, y_train = imgs[train_idx], labels[train_idx]
-    X_valid, y_valid = imgs[valid_idx], labels[valid_idx]
+    focused_images = np.zeros((0,target_shape[0], target_shape[1]))
+    focused_labels = np.zeros((0))
+
+    for i in range(len(imgs)):
+        focus_meas = TENG(imgs[i])
+        focus_measure = np.log(focus_meas)
+        if focus_measure > -2.3:
+            img = np.reshape(imgs[i], (1, target_shape[0], target_shape[1]))
+            focused_images = np.append(focused_images, img, axis=0)
+            focused_labels = np.append(focused_labels, labels[i])
+
+    new_shape = (len(focused_images), target_shape[0], target_shape[1], target_shape[2])
+    focused_images = np.reshape(focused_images, new_shape)
+
+    split = StratifiedShuffleSplit(n_splits=1,test_size=0.1)
+    train_idx, valid_idx = next(split.split(np.zeros(len(focused_labels)), focused_labels))
+
+    np.save("./train_indices_ftteste5.npy", train_idx)
+    np.save("./valid_indices_ftteste5.npy", valid_idx)
+
+    X_train, y_train = focused_images[train_idx], labels[train_idx]
+    X_valid, y_valid = focused_images[valid_idx], labels[valid_idx]
 
     return X_train, y_train, X_valid, y_valid
 
@@ -126,6 +155,11 @@ num_classes= 20
 img_shape = (95, 95, 1)
 
 X_train, y_train, X_valid, y_valid = LoadTrainData(img_shape)
+
+print(np.shape(y_train))
+print(np.shape(y_valid))
+
+
 X_train = X_train.astype("float32")
 X_valid = X_valid.astype("float32")
 y_train = to_categorical(y_train, num_classes)
