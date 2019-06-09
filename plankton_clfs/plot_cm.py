@@ -4,8 +4,8 @@ import pandas as pd
 
 from sklearn.metrics import confusion_matrix
 
-y_pred = np.load("./experimentos/transfer_laps_cnn_079_ndsb_nounk_ffilter_2-3/predicted_labels_valid_ftteste5.npy")
-y_test1 = np.load("./experimentos/transfer_laps_cnn_079_ndsb_nounk_ffilter_2-3/real_labels_valid_ftteste5.npy")
+y_pred = np.load("./experimentos/transfer_laps_cnn_079_ndsb_nounk/predicted_labels_valid_ftteste3.npy")
+y_test1 = np.load("./experimentos/transfer_laps_cnn_079_ndsb_nounk/real_labels_valid_ftteste3.npy")
 
 def plot_confusion_matrix(cm,
                           n_classes,
